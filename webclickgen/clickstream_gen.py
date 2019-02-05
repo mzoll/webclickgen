@@ -13,7 +13,13 @@ class Click(object):
 
 class ClickGenerator(object):
     class User(object):
-        def __init__(self, init_time, CLICK_DECAY_MEAN=10, TIME_DECAY_MEAN_SEC=30, generators=[]):
+        def __init__(self, init_time,
+                CLICK_DECAY_MEAN=10,
+                TIME_DECAY_MEAN_SEC = 60,
+                RESESSION_PROB = 0.2,
+                RESESSION_DIST_MEAN_SEC = 24*60*60,
+                RESESSION_WIDTH_SEC = 60*60,
+                generators=[]):
             """ An entity that navigates a website
 
             :param init_time: datetime
@@ -25,33 +31,64 @@ class ClickGenerator(object):
 
             self.CLICK_DECAY_MEAN = CLICK_DECAY_MEAN
             self.TIME_DECAY_MEAN_SEC = TIME_DECAY_MEAN_SEC
+            self.RESESSION_PROB = RESESSION_PROB
+            self.RESESSION_DIST_MEAN_SEC = RESESSION_DIST_MEAN_SEC
+            self.RESESSION_WIDTH_SEC = RESESSION_WIDTH_SEC
+
             self.uid = uuid.uuid4()
             self.init_time = init_time
-            self.n_clicks_term = 1 + np.round(np.random.exponential(self.CLICK_DECAY_MEAN - 1))
 
-            self._init_props()
+            self.n_clicks_term = None
+            self.n_clicks = None
+            self.next_click_time = None
+            self.last_click_time = None
+            self.is_active = None
 
-        def _init_props(self):
+            self.reset()
+
+        def reset(self):
+            self._init_props(self.init_time)
+
+            for gen in self.generators:
+                gen.reset()
+
+        def _init_props(self, init_time):
             self.n_clicks = 1
-            self.last_click_time = self.init_time
+            self.n_clicks_term = 1 + np.round(np.random.exponential(self.CLICK_DECAY_MEAN - 1))
+            self.last_click_time = init_time
 
-            if self.n_clicks_term == 1:
-                self.is_active = False
-                self.next_click_time = None
+            if self.n_clicks_term == 1:  # first and last click in this session
+                if np.random.rand() < self.RESESSION_PROB:  # a new session maybe?
+                    self.is_active = True
+                    self.next_click_time = self.last_click_time + dt.timedelta(
+                        seconds=np.random.normal(self.RESESSION_DIST_MEAN_SEC, self.RESESSION_WIDTH_SEC))
+                    self.n_clicks_term = -1
+                else:
+                    self.is_active = False
+                    self.next_click_time = None
+
             else:
                 self.is_active = True
                 self.next_click_time = self.last_click_time + dt.timedelta(
                     seconds=np.random.exponential(self.TIME_DECAY_MEAN_SEC))
 
-            for gen in self.generators:
-                gen.init_props()
-
         def step(self):
+            if self.n_clicks_term <= 0:  # this a new session starting
+                self._init_props(self.next_click_time)
+                for gen in self.generators:
+                    gen.soft_reset()
+
             self.n_clicks += 1
             self.last_click_time = self.next_click_time
-            if self.n_clicks >= self.n_clicks_term:
+            if self.n_clicks >= self.n_clicks_term:  # this session has ended
                 self.next_click_time = None
                 self.is_active = False
+                if np.random.rand() < self.RESESSION_PROB:  # a new session can start
+                    self._init_probs()
+                    for gen in self.generators:
+                        gen.soft_reset()
+                    self.is_active = True
+
                 return
             self.next_click_time = self.last_click_time + dt.timedelta(
                 seconds=np.random.exponential(self.TIME_DECAY_MEAN_SEC))

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from webclickgen.clickstream_gen import ClickGenerator
 from webclickgen.subgens import UserAgentGenerator, URLGenerator
 
@@ -26,5 +28,8 @@ def testClickStreamSampleGen():
 
     print(len(clicks))
 
+
+#----------------------------------------------
 if __name__=="__main__":
     testClickStreamSampleGen()
+

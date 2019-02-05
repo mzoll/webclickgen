@@ -10,7 +10,9 @@ class URLGenerator(object):
             self.land_main_prob = land_main_prob
             self.step_levelout_prob = step_levelout_prob
 
-        def init_props(self):
+            self.reset()
+
+        def reset(self):
             # dice the inital url
             if np.random.rand() < self.land_main_prob:
                 self._p0l = '.'
@@ -23,6 +25,9 @@ class URLGenerator(object):
                                   '.' + self.domain_structure_dict['host'] + '.' + self.domain_structure_dict['topdomain'] + \
                                   '/' + self._p0l + '/' + d + '.' + self.domain_structure_dict[
                                       'document_ext']
+
+        def soft_reset(self):
+            self.reset()
 
         def step(self):
             if np.random.rand() < self.step_levelout_prob or self._p0l == '.':

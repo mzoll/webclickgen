@@ -8,11 +8,13 @@ class UserAgentGenerator(object):
     class UserAgentGen_child(object):
         """ Subclass to URLGenerator which can be spawned through URLGenerator.get_child() and reponds to step() and get_dict() """
         def __init__(self):
-            self.init_props()
-        def init_props(self):
+            self.reset()
+        def step(self):
+            pass
+        def reset(self):
             """ generate the agent string once """
             self.agent_string = ua.random
-        def step(self):
+        def soft_reset(self):
             pass
         def get_dict(self):
             return {'user_agent': self.agent_string}
