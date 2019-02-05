@@ -15,18 +15,30 @@ NUM_PATH0_LEVELS = 8
 MIN_NUM_DOC_LEVELS = 1
 MAX_NUM_DOC_LEVELS = 10
 
+RESESSION_PROB = 0.2
+RESESSION_DIST_MEAN_SEC = 24*60*60
+RESESSION_WIDTH_SEC = 60*60
+
 
 def testClickStreamSampleGen():
     url_gen = URLGenerator(NUM_PATH0_LEVELS, MIN_NUM_DOC_LEVELS, MAX_NUM_DOC_LEVELS)
     ua_gen = UserAgentGenerator()
 
-    g = ClickGenerator(MEAN_CONCUR_USERS, CLICK_DECAY_MEAN, TIME_DECAY_MEAN_SEC, [url_gen, ua_gen])
+    g = ClickGenerator(
+            MEAN_CONCUR_USERS,
+            CLICK_DECAY_MEAN,
+            TIME_DECAY_MEAN_SEC,
+            RESESSION_PROB,
+            RESESSION_DIST_MEAN_SEC,
+            RESESSION_WIDTH_SEC,
+            [url_gen, ua_gen])
 
     clicks = []
     for i in range(N_CLICKS_TOTAL):
         clicks.append(g.next())
 
     print(len(clicks))
+    print(clicks[-1])
 
 
 #----------------------------------------------

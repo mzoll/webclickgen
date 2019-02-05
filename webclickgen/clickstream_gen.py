@@ -9,6 +9,8 @@ class Click(object):
         self.uid = uid
         self.ts = ts
         self.data = data
+    def __str__(self):
+        return f"Click :: uid: {self.uid}, ts: {self.ts}, data: {self.data}"
 
 
 class ClickGenerator(object):
@@ -58,15 +60,13 @@ class ClickGenerator(object):
             self.last_click_time = init_time
 
             if self.n_clicks_term == 1:  # first and last click in this session
-                if np.random.rand() < self.RESESSION_PROB:  # a new session maybe?
+                self.is_active = False
+                self.next_click_time = None
+                if np.random.rand() < self.RESESSION_PROB:  # a new session
                     self.is_active = True
                     self.next_click_time = self.last_click_time + dt.timedelta(
                         seconds=np.random.normal(self.RESESSION_DIST_MEAN_SEC, self.RESESSION_WIDTH_SEC))
                     self.n_clicks_term = -1
-                else:
-                    self.is_active = False
-                    self.next_click_time = None
-
             else:
                 self.is_active = True
                 self.next_click_time = self.last_click_time + dt.timedelta(
@@ -84,15 +84,16 @@ class ClickGenerator(object):
                 self.next_click_time = None
                 self.is_active = False
                 if np.random.rand() < self.RESESSION_PROB:  # a new session can start
-                    self._init_probs()
+                    self.is_active = True
+                    self.next_click_time = self.last_click_time + dt.timedelta(
+                        seconds=np.random.normal(self.RESESSION_DIST_MEAN_SEC, self.RESESSION_WIDTH_SEC))
+                    self.n_clicks_term = -1
                     for gen in self.generators:
                         gen.soft_reset()
-                    self.is_active = True
-
                 return
+
             self.next_click_time = self.last_click_time + dt.timedelta(
                 seconds=np.random.exponential(self.TIME_DECAY_MEAN_SEC))
-
             for gen in self.generators:
                 gen.step()
 
@@ -106,7 +107,14 @@ class ClickGenerator(object):
             return d
 
 
-    def __init__(self, mean_concur_users, CLICK_DECAY_MEAN, TIME_DECAY_MEAN_SEC, generators):
+    def __init__(self,
+            mean_concur_users,
+            CLICK_DECAY_MEAN,
+            TIME_DECAY_MEAN_SEC,
+            RESESSION_PROB,
+            RESESSION_DIST_MEAN_SEC,
+            RESESSION_WIDTH_SEC,
+            generators):
         """
         generate web-clicks in a time-generative process
 
@@ -116,15 +124,27 @@ class ClickGenerator(object):
         self.mean_concur_users = mean_concur_users
         self.CLICK_DECAY_MEAN = CLICK_DECAY_MEAN
         self.TIME_DECAY_MEAN_SEC = TIME_DECAY_MEAN_SEC
+        self.RESESSION_PROB = RESESSION_PROB
+        self.RESESSION_DIST_MEAN_SEC = RESESSION_DIST_MEAN_SEC
+        self.RESESSION_WIDTH_SEC = RESESSION_WIDTH_SEC
+
         self.generators = generators
 
         self._active_users = []
 
         now = dt.datetime.now()
 
+        #instead of generating an exact state, just initialize the generative process at a previous point and roll forward
         for u in range(self.mean_concur_users):
             join_time = now - dt.timedelta(seconds= np.random.uniform( 0, self.CLICK_DECAY_MEAN*self.TIME_DECAY_MEAN_SEC))
-            u = self.User(join_time, self.CLICK_DECAY_MEAN, self.TIME_DECAY_MEAN_SEC, [gen.get_child() for gen in self.generators])
+            u = self.User(
+                    join_time,
+                    self.CLICK_DECAY_MEAN,
+                    self.TIME_DECAY_MEAN_SEC,
+                    self.RESESSION_PROB,
+                    self.RESESSION_DIST_MEAN_SEC,
+                    self.RESESSION_WIDTH_SEC,
+                    [gen.get_child() for gen in self.generators])
             if u.is_active:
                 self._active_users.append(u)
         self._active_users = list(sorted(self._active_users, key=lambda u: u.next_click_time))
@@ -140,7 +160,14 @@ class ClickGenerator(object):
     def next(self):
         """ work of joins in neccessary """
         if self._next_userjoin_time < self._next_userclick_time:
-            click_user = self.User(self._next_userjoin_time, self.CLICK_DECAY_MEAN, self.TIME_DECAY_MEAN_SEC, [gen.get_child() for gen in self.generators])
+            click_user = self.User(
+                    self._next_userjoin_time,
+                    self.CLICK_DECAY_MEAN,
+                    self.TIME_DECAY_MEAN_SEC,
+                    self.RESESSION_PROB,
+                    self.RESESSION_DIST_MEAN_SEC,
+                    self.RESESSION_WIDTH_SEC,
+                    [gen.get_child() for gen in self.generators])
 
             if click_user.is_active:
                 self._active_users.append(click_user)
