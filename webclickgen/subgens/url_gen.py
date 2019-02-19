@@ -31,7 +31,8 @@ class URLGenerator(object):
                                   '/' + self._p0l + '/' + d + '.' + self.domain_structure_dict[
                                       'document_ext']
             #dice the referer
-            self.referer = np.random.choice(list(self.referer_structure_dict.keys()), size=1, p=list(self.referer_structure_dict.values()))
+            self.referer = np.random.choice(list(self.referer_structure_dict.keys()),
+                                            size=1, p=list(self.referer_structure_dict.values()))[0]
 
 
         def soft_reset(self):

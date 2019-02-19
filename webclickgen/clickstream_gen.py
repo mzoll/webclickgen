@@ -132,7 +132,7 @@ class ClickGenerator(object):
 
         self._active_users = []
 
-        now = dt.datetime.now()
+        now = dt.datetime.utcnow()
 
         #instead of generating an exact state, just initialize the generative process at a previous point and roll forward
         for u in range(self.mean_concur_users):

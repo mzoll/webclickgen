@@ -6,8 +6,8 @@ ua = UserAgent()
 
 class UserAgentGenerator(object):
     class UserAgentGen_child(object):
-        """ Subclass to URLGenerator which can be spawned through URLGenerator.get_child() and reponds to step() and get_dict() """
-        def __init__(self):
+        """ Subclass to UserAgentGenerator which can be spawned through .get_child() and reponds to step() and get_dict() """
+        def __init__(self, **kwargs):
             self.reset()
         def step(self):
             pass
