@@ -6,11 +6,15 @@ import uuid
 
 class Click(object):
     def __init__(self, uid, ts, data):
-        self.uid = uid
+        self.uid = uid  #FIXME it should ne click.userid
         self.ts = ts
         self.data = data
     def __str__(self):
         return f"Click :: uid: {self.uid}, ts: {self.ts}, data: {self.data}"
+    def as_simple_dict(self):
+        d = self.data.copy()
+        d.update({'userid': self.uid.hex, 'timestamp': self.ts.isoformat()})
+        return d
 
 
 class ClickGenerator(object):
