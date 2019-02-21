@@ -6,15 +6,15 @@ import uuid
 
 
 class Click(object):
-    def __init__(self, uid, ts, data):
+    def __init__(self, userid, ts, data):
         self.userid = userid
         self.ts = ts
         self.data = data
     def __str__(self):
-        return f"Click :: uid: {self.uid}, ts: {self.ts}, data: {self.data}"
+        return f"Click :: uid: {self.userid}, ts: {self.ts}, data: {self.data}"
     def as_simple_dict(self):
         d = self.data.copy()
-        d.update({'userid': self.uid.hex, 'timestamp': self.ts.isoformat()})
+        d.update({'userid': self.userid.hex, 'timestamp': self.ts})
         return d
 
 
