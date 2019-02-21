@@ -7,7 +7,7 @@ import uuid
 
 class Click(object):
     def __init__(self, uid, ts, data):
-        self.uid = uid  #FIXME it should ne click.userid
+        self.userid = userid
         self.ts = ts
         self.data = data
     def __str__(self):
